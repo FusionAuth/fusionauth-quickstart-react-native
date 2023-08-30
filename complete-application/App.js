@@ -1,22 +1,27 @@
 import {useEffect, useState} from 'react';
-import {StatusBar} from 'expo-status-bar';
-import {StyleSheet, Button, Text, View} from 'react-native';
+import Constants from 'expo-constants';
+import CurrencyInput from 'react-native-currency-input';
+import styles from './changebank.style';
+import {openBrowserAsync} from 'expo-web-browser';
+import {Text, TouchableOpacity, View} from 'react-native';
 import {
   exchangeCodeAsync,
+  fetchUserInfoAsync,
   makeRedirectUri,
-  useAutoDiscovery,
   useAuthRequest,
+  useAutoDiscovery,
 } from 'expo-auth-session';
-import { Image } from 'expo-image';
-import Constants from 'expo-constants';
-import styles from './changebank.style';
+import {Image} from 'expo-image';
+import {StatusBar} from 'expo-status-bar';
 
 export default function App() {
-  const [accessToken, setAccessToken] = useState(null);
+  const [authResponse, setAuthResponse] = useState(null);
+  const [amount, setAmount] = useState(0);
   const discovery = useAutoDiscovery(process.env.EXPO_PUBLIC_FUSIONAUTH_URL);
 
   const redirectUri = makeRedirectUri({
-    scheme: 'io.fusionauth.app',
+    scheme: Constants.expoConfig.scheme,
+    path: 'redirect',
   });
 
   const [request, response, promptAsync] = useAuthRequest({
@@ -26,73 +31,104 @@ export default function App() {
     redirectUri,
   }, discovery);
 
-  // This is being called after we are redirected back to this page after initial login
-  useEffect(() => {
-    if (response) {
-      if (response.type === 'success') {
-        exchangeCodeAsync({
-          clientId: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
-          code: response.params.code,
-          extraParams: {
-            code_verifier: request.codeVerifier,
-          },
-          redirectUri,
-        }, discovery).then(setAccessToken).catch((error) => {
-          console.error(error);
-        });
-        return;
-      }
+  const logout = async () => {
+    const params = new URLSearchParams({
+      client_id: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
+      post_logout_redirect_uri: redirectUri,
+    });
+    await openBrowserAsync(discovery.endSessionEndpoint + '?' + params.toString()).then(() => setAuthResponse(null));
+  };
 
-      // You should handle errors here :)
-      console.error(response);
+  const handleError = (error) => {
+    console.error(error);
+    alert(error.message);
+  };
+
+  useEffect(() => {
+    if (!response) {
+      return;
     }
+
+    if (response.type !== 'success') {
+      handleError(response.error || {
+        message: `Operation failed: ${response.type}`
+      });
+      return;
+    }
+
+    exchangeCodeAsync({
+      clientId: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
+      code: response.params.code,
+      extraParams: {
+        code_verifier: request.codeVerifier,
+      },
+      redirectUri,
+    }, discovery).then((response) => {
+      fetchUserInfoAsync(response, discovery).then((userRecord) => setAuthResponse({
+        accessToken: response.accessToken,
+        user: userRecord,
+      })).catch(handleError);
+    }).catch(handleError);
   }, [response]);
 
-  const blurhash =
-      '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
+  const amountCents = amount * 100;
+  const nickels = Math.floor(amountCents / 5);
 
   return (
       <View style={styles.container}>
-        <StatusBar style="auto" />
-        <View style={[styles.pageContainer, {marginTop: Constants.statusBarHeight}]}>
-          <View style={styles.pageHeader}>
-            <View style={styles.logoHeader}>
-              <Image source="https://fusionauth.io/assets/img/samplethemes/changebank/changebank.svg"
-                     style={styles.image}
-                     placeholder={blurhash}
-                     contentFit="cover"
-                     transition={1000}
-              />
-              <View style={styles.hRow}>
-                <Text style={styles.buttonLg}>Log in</Text>
-              </View>
-            </View>
-
-            <View style={styles.menuBar}>
-              <Text style={styles.menuLink} href="/">Home</Text>
+        <StatusBar style="auto"/>
+        <View style={[styles.pageHeader, {marginTop: Constants.statusBarHeight}]}>
+          <View style={styles.logoHeader}>
+            <Image
+                source={require('./assets/changebank.svg')}
+                style={styles.image}
+                contentFit="contain"
+                transition={1000}
+            />
+            <View style={styles.hRow}>
+              {(authResponse) ? (
+                  <>
+                    <Text style={styles.headerEmail}>{authResponse.user.email}</Text>
+                    <TouchableOpacity disabled={!request} onPress={() => logout()}>
+                      <Text style={styles.buttonLg}>Log out</Text>
+                    </TouchableOpacity>
+                  </>
+              ) : (
+                  <TouchableOpacity disabled={!request}
+                                    onPress={() => promptAsync()}>
+                    <Text style={styles.buttonLg}>Log in</Text>
+                  </TouchableOpacity>
+              )}
             </View>
           </View>
 
-          <View style={{flex: 1}}>
-            <View style={styles.columnContainer}>
-              <View style={styles.appContainer}>
-                <Text style={styles.h1}>Log in to manage your account</Text>
-              </View>
-            </View>
+          <View style={styles.menuBar}>
+            <Text style={styles.menuLink}>{(authResponse) ? 'Make Change' : 'Home'}</Text>
           </View>
         </View>
-      </View>
-  );
 
-  return (
-      <View style={styles.container}>
-        <Text>Welcome to FusionAuth</Text>
-        {(accessToken)
-            ? <Text>{JSON.stringify(accessToken)}</Text>
-            : <Button disabled={!request}
-                      title="Log in"
-                      onPress={() => promptAsync()}></Button>}
-        <StatusBar style="auto"/>
+        <View style={styles.appContainer}>
+          {(authResponse) ? (
+              <>
+                <Text style={styles.h1}>We Make Change</Text>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.changeLabel}>Amount in USD:</Text>
+                  <CurrencyInput
+                      prefix="$ "
+                      value={amount}
+                      onChangeValue={setAmount}
+                      style={styles.changeInput}
+                  />
+                </View>
+                <Text style={styles.changeMessage}>
+                  We can make change for ${(amount || 0).toFixed(2)} with {nickels} nickels and{' '}
+                  {amountCents % 5} pennies!
+                </Text>
+              </>
+          ) : (
+              <Text style={styles.h1}>Log in to manage your account</Text>
+          )}
+        </View>
       </View>
   );
 }

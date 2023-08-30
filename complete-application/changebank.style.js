@@ -4,8 +4,6 @@ export default StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
     },
     h1: {
         color: '#096324',
@@ -42,43 +40,32 @@ export default StyleSheet.create({
         alignItems: 'flex-end',
         flex: 1,
     },
-    pageContainer: {
+    pageHeader: {
         display: 'flex',
         flexDirection: 'column',
         width: '100%',
-        height: '100%',
-    },
-    pageHeader: {
-        flex: 0,
-        display: 'flex',
-        flexDirection: 'column',
     },
     logoHeader: {
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 10,
         height: 150,
-        marginHorizontal: 10,
+        paddingVertical: 10,
+        marginHorizontal: 20,
     },
     menuBar: {
         display: 'flex',
         flexDirection: 'row',
+        columnGap: 10,
         alignItems: 'center',
         paddingVertical: 15,
         paddingHorizontal: 20,
         backgroundColor: '#096324',
     },
     menuLink: {
-        // fontSize: 20,
         fontWeight: '600',
         color: '#ffffff',
-        // marginLeft: 40,
-        textDecorationLine: 'underline',
-    },
-    inactive: {
-        textDecorationLine: 'none',
     },
     buttonLg: {
         backgroundColor: '#096324',
@@ -90,11 +77,6 @@ export default StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 5,
         textDecorationLine: 'none',
-    },
-    columnContainer: {
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
     },
     contentContainer: {
         flex: 1,
@@ -110,36 +92,28 @@ export default StyleSheet.create({
         fontWeight: '800',
     },
     changeLabel: {
+        flex: 1,
         fontSize: 20,
         marginRight: 5,
     },
     changeInput: {
+        flex: 1,
+        flexGrow: 1,
+        flexShrink: 0,
         fontSize: 20,
-        height: 40,
+        borderColor: '#999',
+        borderWidth: 1,
+        padding: 5,
         textAlign: 'right',
-        paddingRight: 10,
-    },
-    changeSubmit: {
-        fontSize: 15,
-        height: 40,
-        marginLeft: 15,
-        borderRadius: 5,
     },
     changeMessage: {
         fontSize: 20,
         marginBottom: 15,
     },
-    errorMessage: {
-        fontSize: 20,
-        color: '#ff0000',
-        marginBottom: 15,
-    },
     appContainer: {
-        flex: 0,
-        display: 'flex',
-        flexDirection: 'column',
+        width: '100%',
         marginTop: 40,
-        marginHorizontal: 20,
+        paddingHorizontal: 20,
     },
     changeContainer: {
         flex: 1,
@@ -147,5 +121,12 @@ export default StyleSheet.create({
     image: {
         flex: 1,
         height: '100%',
-    }
+    },
+    inputContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: "space-between",
+        marginVertical: 10,
+    },
 });
