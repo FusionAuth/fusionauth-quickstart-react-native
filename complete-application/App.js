@@ -10,6 +10,8 @@ import {
   makeRedirectUri,
   useAuthRequest,
   useAutoDiscovery,
+  AuthRequest,
+  AuthSessionResult
 } from 'expo-auth-session';
 import {Image} from 'expo-image';
 import {StatusBar} from 'expo-status-bar';
@@ -24,12 +26,22 @@ export default function App() {
     path: 'redirect',
   });
 
-  const [request, response, promptAsync] = useAuthRequest({
+  const [requestLogin, responseLogin, promptLogin] = useAuthRequest({
     clientId: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
     scopes: ['openid', 'offline_access'],
     usePKCE: true,
     redirectUri,
   }, discovery);
+
+  const [requestRegister, responseRegister, promptRegister] = useAuthRequest({
+    clientId: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
+    scopes: ['openid', 'offline_access'],
+    usePKCE: true,
+    redirectUri,
+  }, (discovery) ? {
+    ...discovery,
+    authorizationEndpoint: discovery.authorizationEndpoint.replace('/authorize', '/register')
+  } : null);
 
   const logout = async () => {
     const params = new URLSearchParams({
@@ -44,7 +56,13 @@ export default function App() {
     alert(error.message);
   };
 
-  useEffect(() => {
+  /**
+   * This will handle login and register operations
+   *
+   * @param {AuthRequest} request
+   * @param {AuthSessionResult} response
+   */
+  const handleOperation = (request, response) => {
     if (!response) {
       return;
     }
@@ -69,7 +87,15 @@ export default function App() {
         user: userRecord,
       })).catch(handleError);
     }).catch(handleError);
-  }, [response]);
+  };
+
+  useEffect(() => {
+    handleOperation(requestLogin, responseLogin);
+  }, [responseLogin]);
+
+  useEffect(() => {
+    handleOperation(requestRegister, responseRegister);
+  }, [responseRegister]);
 
   const amountCents = amount * 100;
   const nickels = Math.floor(amountCents / 5);
@@ -89,15 +115,19 @@ export default function App() {
               {(authResponse) ? (
                   <>
                     <Text style={styles.headerEmail}>{authResponse.user.email}</Text>
-                    <TouchableOpacity disabled={!request} onPress={() => logout()}>
+                    <TouchableOpacity disabled={!requestLogin} onPress={() => logout()}>
                       <Text style={styles.buttonLg}>Log out</Text>
                     </TouchableOpacity>
                   </>
               ) : (
-                  <TouchableOpacity disabled={!request}
-                                    onPress={() => promptAsync()}>
-                    <Text style={styles.buttonLg}>Log in</Text>
-                  </TouchableOpacity>
+                  <>
+                    <TouchableOpacity disabled={!requestLogin} onPress={() => promptLogin()}>
+                      <Text style={styles.buttonLg}>Log in</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity disabled={!requestLogin} onPress={() => promptRegister()}>
+                      <Text style={styles.buttonLg}>Register</Text>
+                    </TouchableOpacity>
+                  </>
               )}
             </View>
           </View>
@@ -122,7 +152,7 @@ export default function App() {
                 </View>
                 <Text style={styles.changeMessage}>
                   We can make change for ${(amount || 0).toFixed(2)} with {nickels} nickels and{' '}
-                  {amountCents % 5} pennies!
+                  {Math.round(amountCents % 5)} pennies!
                 </Text>
               </>
           ) : (

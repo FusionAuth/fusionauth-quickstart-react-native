@@ -25,7 +25,6 @@ export default StyleSheet.create({
     },
     headerEmail: {
         color: '#096324',
-        marginBottom: 10,
     },
     finePrint: {
         fontSize: 16,
@@ -39,6 +38,7 @@ export default StyleSheet.create({
         display: 'flex',
         alignItems: 'flex-end',
         flex: 1,
+        rowGap: 10,
     },
     pageHeader: {
         display: 'flex',
