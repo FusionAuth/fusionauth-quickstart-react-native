@@ -17,15 +17,34 @@ import {Image} from 'expo-image';
 import {StatusBar} from 'expo-status-bar';
 
 export default function App() {
+  /**
+   * This will hold the access token and the user details after successful authorization
+   */
   const [authResponse, setAuthResponse] = useState(null);
+
+  /**
+   * This is what the ChangeBank app will use to make change
+   */
   const [amount, setAmount] = useState(0);
+
+  /**
+   * This is a helper function from expo-auth-session to retrieve the URLs used for authorization
+   */
   const discovery = useAutoDiscovery(process.env.EXPO_PUBLIC_FUSIONAUTH_URL);
 
+  /**
+   * Creating a new Redirect URI using the scheme configured in app.json.
+   * Expo Go will override this with a local URL when developing.
+   */
   const redirectUri = makeRedirectUri({
     scheme: Constants.expoConfig.scheme,
     path: 'redirect',
   });
 
+  /**
+   * useAuthRequest() is another helper function from expo-auth-session that handles the authorization request.
+   * It returns a promptLogin() function that should be called to initiate the process.
+   */
   const [requestLogin, responseLogin, promptLogin] = useAuthRequest({
     clientId: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
     scopes: ['openid', 'offline_access'],
@@ -33,6 +52,9 @@ export default function App() {
     redirectUri,
   }, discovery);
 
+  /**
+   * We do the same thing as above but for the user registration endpoint.
+   */
   const [requestRegister, responseRegister, promptRegister] = useAuthRequest({
     clientId: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
     scopes: ['openid', 'offline_access'],
@@ -43,6 +65,11 @@ export default function App() {
     authorizationEndpoint: discovery.authorizationEndpoint.replace('/authorize', '/register')
   } : null);
 
+  /**
+   * To log the user out, we redirect to the end session endpoint
+   *
+   * @return {Promise<void>}
+   */
   const logout = async () => {
     const params = new URLSearchParams({
       client_id: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
@@ -51,6 +78,11 @@ export default function App() {
     await openBrowserAsync(discovery.endSessionEndpoint + '?' + params.toString()).then(() => setAuthResponse(null));
   };
 
+  /**
+   * Auxiliary function to handle displaying errors
+   *
+   * @param {Error} error
+   */
   const handleError = (error) => {
     console.error(error);
     alert(error.message);
@@ -67,6 +99,9 @@ export default function App() {
       return;
     }
 
+    /**
+     * If something wrong happened, we call our error helper function
+     */
     if (response.type !== 'success') {
       handleError(response.error || {
         message: `Operation failed: ${response.type}`
@@ -74,6 +109,9 @@ export default function App() {
       return;
     }
 
+    /**
+     * If the authorization process worked, we need to exchange the authorization code for an access token.
+     */
     exchangeCodeAsync({
       clientId: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
       code: response.params.code,
@@ -82,6 +120,7 @@ export default function App() {
       },
       redirectUri,
     }, discovery).then((response) => {
+      // Now that we have an access token, we can call the /oauth2/userinfo endpoint
       fetchUserInfoAsync(response, discovery).then((userRecord) => setAuthResponse({
         accessToken: response.accessToken,
         user: userRecord,
@@ -89,14 +128,25 @@ export default function App() {
     }).catch(handleError);
   };
 
+  /*
+   * This is a React Hook that will call the handleOperation() method
+   * whenever the login process redirects from the browser to our app.
+   */
   useEffect(() => {
     handleOperation(requestLogin, responseLogin);
   }, [responseLogin]);
 
+  /*
+   * This is a React Hook that will call the handleOperation() method
+   * whenever the signup process redirects from the browser to our app.
+   */
   useEffect(() => {
     handleOperation(requestRegister, responseRegister);
   }, [responseRegister]);
 
+  /**
+   * Making change for our ChangeBank app
+   */
   const amountCents = amount * 100;
   const nickels = Math.floor(amountCents / 5);
 
