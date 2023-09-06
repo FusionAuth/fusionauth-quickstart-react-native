@@ -50,6 +50,9 @@
                   "enabled": true,
                   "accessTokenKeyId": "#{asymmetricKeyId}",
                   "idTokenKeyId": "#{asymmetricKeyId}"
+                },
+                "registrationConfiguration": {
+                  "enabled": true
                 }
               }
             }
