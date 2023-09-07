@@ -195,6 +195,8 @@ export default function App() {
                   <Text style={styles.changeLabel}>Amount in USD:</Text>
                   <CurrencyInput
                       prefix="$ "
+                      delimiter=","
+                      separator="."
                       value={amount}
                       onChangeValue={setAmount}
                       style={styles.changeInput}
