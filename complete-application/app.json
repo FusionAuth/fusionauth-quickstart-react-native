@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "fusionauth-quickstart-react-native",
-    "slug": "fusionauth-quickstart-react-native",
+    "name": "my-react-native-app",
+    "slug": "my-react-native-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
