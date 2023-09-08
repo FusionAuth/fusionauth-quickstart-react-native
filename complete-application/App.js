@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 import Constants from 'expo-constants';
 import CurrencyInput from 'react-native-currency-input';
 import styles from './changebank.style';
-import {openBrowserAsync} from 'expo-web-browser';
+import {openAuthSessionAsync} from 'expo-web-browser';
 import {Text, TouchableOpacity, View} from 'react-native';
 import {
   exchangeCodeAsync,
@@ -68,14 +68,22 @@ export default function App() {
   /**
    * To log the user out, we redirect to the end session endpoint
    *
-   * @return {Promise<void>}
+   * @return {void}
    */
-  const logout = async () => {
+  const logout = () => {
     const params = new URLSearchParams({
       client_id: process.env.EXPO_PUBLIC_FUSIONAUTH_CLIENT_ID,
       post_logout_redirect_uri: redirectUri,
     });
-    await openBrowserAsync(discovery.endSessionEndpoint + '?' + params.toString()).then(() => setAuthResponse(null));
+    openAuthSessionAsync(discovery.endSessionEndpoint + '?' + params.toString(), redirectUri)
+      .then((result) => {
+        if (result.type !== 'success') {
+          handleError(new Error('Please, confirm the logout request and wait for it to finish.'));
+          console.error(result);
+          return;
+        }
+        setAuthResponse(null);
+      });
   };
 
   /**
@@ -103,9 +111,7 @@ export default function App() {
      * If something wrong happened, we call our error helper function
      */
     if (response.type !== 'success') {
-      handleError(response.error || {
-        message: `Operation failed: ${response.type}`
-      });
+      handleError(response.error || new Error(`Operation failed: ${response.type}`));
       return;
     }
 
