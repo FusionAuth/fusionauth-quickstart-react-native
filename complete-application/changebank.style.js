@@ -77,6 +77,7 @@ export default StyleSheet.create({
         paddingHorizontal: 15,
         paddingVertical: 5,
         textDecorationLine: 'none',
+        overflow: 'hidden',
     },
     contentContainer: {
         flex: 1,
