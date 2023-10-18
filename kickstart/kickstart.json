@@ -1,9 +1,9 @@
 {
     "variables": {
         "applicationId": "E9FDB985-9173-4E01-9D73-AC2D60D1DC8E",
-        "apiKey": "this_really_should_be_a_long_random_alphanumeric_value_but_this_still_works_dont_use_this_in_prod",
+        "apiKey": "super-secret-secret-that-should-be-regenerated-for-production",
         "asymmetricKeyId": "#{UUID()}",
-        "clientSecret": "this_really_should_be_a_long_random_alphanumeric_value_but_this_still_works_dont_use_this_in_prod",
+        "clientSecret": "super-secret-secret-that-should-be-regenerated-for-production",
         "newThemeId": "#{UUID()}",
         "defaultTenantId": "d7d09513-a3f5-401c-9685-34ab6c552453",
         "adminEmail": "admin@example.com",
