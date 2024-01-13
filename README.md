@@ -77,7 +77,7 @@ When the application starts in your physical or emulated device, click `Log in` 
 
 ### Further Information
 
-Visit https://fusionauth.io/quickstarts/quickstart-react-native for a step by step guide on how to build this React Native app integrated with FusionAuth by scratch.
+Visit https://fusionauth.io/docs/quickstarts/quickstart-react-native for a step by step guide on how to build this React Native app integrated with FusionAuth by scratch.
 
 ### Troubleshooting
 
